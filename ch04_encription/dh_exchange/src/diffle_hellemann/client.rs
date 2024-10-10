@@ -10,6 +10,6 @@ impl Client {
     }
 
     pub fn hello(&self) {
-        println!("Hello!! I am{}", self.name);
+        println!("Hello!! I am {}", self.name);
     }
 }
