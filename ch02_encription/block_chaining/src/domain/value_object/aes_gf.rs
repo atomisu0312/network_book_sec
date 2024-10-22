@@ -2,12 +2,12 @@ use std::fmt;
 use std::mem;
 use std::ops::*;
 
-#[derive(Default, Debug, Clone, Copy)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct aesGF {
     pub value: u8,
 }
 
-// 演算子のオーバーロードしている
+// ＋演算子をオーバーロードしているだけ
 impl Add for aesGF {
     type Output = Self;
     fn add(self, rhs: Self) -> Self {
@@ -17,7 +17,8 @@ impl Add for aesGF {
     }
 }
 
-// 演算子のオーバーロードしている
+// ＊演算子のオーバーロードしているだけ
+// 原始多項式はx^8 + x^4 + x^3 + x + 1
 impl Mul for aesGF {
     type Output = Self;
 
@@ -29,7 +30,8 @@ impl Mul for aesGF {
             if n & 1 == 1 {
                 ret = ret ^ a;
             }
-            a = (a << 1) ^ (if a & 0x80 == 0x80 { 0x1b } else { 0 }) & 0xff;
+            // オーバーフローを考慮している。
+            a = (a << 1) ^ (if a & 0x80 == 0x80 { 0x1b } else { 0 });
             //println!("{:>08b} {} {:>08b}",ret,n,a);
 
             n >>= 1;
@@ -37,6 +39,19 @@ impl Mul for aesGF {
         Self { value: ret }
     }
 }
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_multiply() {
+        assert_eq!(
+            aesGF { value: 0x57 } * aesGF { value: 0x83 },
+            aesGF { value: 0xc1 }
+        );
+    }
+}
+
 impl fmt::Display for aesGF {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:x}", self.value)
@@ -53,6 +68,3 @@ impl aesGF {
         ret
     }
 }
-
-#[cfg(test)]
-mod test {}
